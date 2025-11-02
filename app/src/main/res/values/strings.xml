@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">multifinance</string>
+    <string name="app_name">Алтыным</string>
+    <string name="app_description">Мультибанковское приложение</string>
 </resources>

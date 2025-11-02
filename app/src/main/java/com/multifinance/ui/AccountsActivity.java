@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import com.multifinance.R;
 import com.multifinance.data.model.Account;
 import com.multifinance.data.repository.ApiRepository;

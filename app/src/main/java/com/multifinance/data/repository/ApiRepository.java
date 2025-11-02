@@ -24,12 +24,12 @@ public class ApiRepository {
         List<Account> accounts = new ArrayList<>();
         accounts.add(Account.builder()
                 .id("1")
-                .name("Checking")
+                .name("Сберегательный")
                 .balance(1200.50)
                 .build());
         accounts.add(Account.builder()
                 .id("2")
-                .name("Savings")
+                .name("Кредитный")
                 .balance(3500.75)
                 .build());
         return accounts;
