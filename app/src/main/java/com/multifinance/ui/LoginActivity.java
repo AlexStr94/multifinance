@@ -7,16 +7,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import com.multifinance.R;
 import com.multifinance.data.model.User;
 import com.multifinance.data.repository.ApiRepository;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText usernameEditText;
+    private EditText emailEditText;
     private EditText passwordEditText;
     private TextView errorTextView;
     private ApiRepository repository;
@@ -30,11 +31,23 @@ public class LoginActivity extends AppCompatActivity {
         repository = new ApiRepository();
         sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
 
-        usernameEditText = findViewById(R.id.usernameEditText);
-        passwordEditText = findViewById(R.id.passwordEditText);
-        errorTextView = findViewById(R.id.errorTextView);
-        ImageView logoImageView = findViewById(R.id.logoImageView);
-        Button loginButton = findViewById(R.id.loginButton);
+        emailEditText = findViewById(R.id.et_email);
+        passwordEditText = findViewById(R.id.et_password);
+        errorTextView = new TextView(this);
+        errorTextView.setTextColor(ContextCompat.getColor(this, R.color.errorText));
+
+        // Добавляем errorTextView в контейнер формы под паролем
+        ((View) passwordEditText.getParent()).post(() -> {
+            ((View) passwordEditText.getParent()).requestLayout();
+            ((android.widget.LinearLayout) passwordEditText.getParent()).addView(errorTextView,
+                    ((android.widget.LinearLayout) passwordEditText.getParent()).indexOfChild(passwordEditText) + 1);
+        });
+
+        Button loginButton = findViewById(R.id.btn_login);
+        Button registerButton = findViewById(R.id.btn_register);
+
+        // Делаем кнопку регистрации неактивной
+        registerButton.setEnabled(false);
 
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -45,10 +58,15 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void login() {
-        String username = usernameEditText.getText().toString();
-        String password = passwordEditText.getText().toString();
+        String email = emailEditText.getText().toString().trim();
+        String password = passwordEditText.getText().toString().trim();
 
-        User user = repository.login(username, password);
+        if (email.isEmpty() || password.isEmpty()) {
+            errorTextView.setText("Пожалуйста, заполните все поля");
+            return;
+        }
+
+        User user = repository.login(email, password);
         if (user != null && user.getToken() != null && !user.getToken().isEmpty()) {
             saveToken(user.getToken());
             errorTextView.setText("");
@@ -66,7 +84,6 @@ public class LoginActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("auth_token", token);
 
-        // Можно добавить хранение времени жизни токена
         long expiryTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000); // 24 часа
         editor.putLong("token_expiry", expiryTime);
 
