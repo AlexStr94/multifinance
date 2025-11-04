@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_marginTop="16dp"
+    android:background="@drawable/card_surface_rounded">
+
+    <!-- Заголовок -->
+    <TextView
+        android:id="@+id/tv_analytics_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Аналитика"
+        android:textColor="@color/secondaryText"
+        android:textSize="14sp" />
+
+    <!-- Блок значений -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:weightSum="2">
+
+        <!-- Доходы -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_income_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Доходы"
+                android:textColor="@color/secondaryText"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_income_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+0 ₽"
+                android:textColor="@color/primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Расходы -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_expense_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Расходы"
+                android:textColor="@color/secondaryText"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_expense_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-0 ₽"
+                android:textColor="@color/errorText"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

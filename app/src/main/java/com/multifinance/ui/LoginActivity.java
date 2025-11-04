@@ -72,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
             errorTextView.setText("");
 
             // Переход на главный экран
-            Intent intent = new Intent(LoginActivity.this, AccountsActivity.class);
+            Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
             startActivity(intent);
             finish();
         } else {

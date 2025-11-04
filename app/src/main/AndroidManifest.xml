@@ -21,8 +21,13 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
     </activity>
+        <activity
+            android:name=".ui.DashboardActivity"
+            android:exported="false" />
 
-    <!-- Экран со счетами -->
+
+
+        <!-- Экран со счетами -->
     <activity
         android:name=".ui.AccountsActivity"
         android:exported="false" />

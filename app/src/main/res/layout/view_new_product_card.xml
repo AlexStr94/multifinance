@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/card_new_product"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="16dp"
+    android:layout_marginTop="16dp"
+    android:background="@drawable/card_surface_rounded"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <!-- Иллюстрация -->
+    <ImageView
+        android:id="@+id/img_new_product"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_hand_coin"
+        android:contentDescription="Открыть счет, вклад или кредитный продукт."
+        android:layout_marginEnd="16dp" />
+
+    <!-- Текстовая часть -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_new_product_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Откройте новый продукт"
+            android:textColor="@color/primaryText"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_new_product_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Счет, вклад, кредит или карта — всё в одном месте"
+            android:textColor="@color/secondaryText"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+</LinearLayout>

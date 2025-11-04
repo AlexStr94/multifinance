@@ -10,6 +10,8 @@ import java.util.List;
 
 public class ApiRepository {
 
+    public static final String FILTER_ALL = "all";
+
     // Моковая авторизация
     public User login(String username, String password) {
         return User.builder()
@@ -36,7 +38,13 @@ public class ApiRepository {
     }
 
     // Получение списка транзакций для конкретного счета
-    public List<Transaction> getTransactions(String accountId, String token) {
+    public List<Transaction> getTransactions(
+            String token,
+            String accountId,          // "all" — все счета
+            LocalDateTime startDate,   // может быть null
+            LocalDateTime endDate,     // может быть null
+            String category            // null или "all" — без фильтра
+    ) {
         List<Transaction> transactions = new ArrayList<>();
         transactions.add(Transaction.builder()
                 .id("t1")
@@ -61,4 +69,6 @@ public class ApiRepository {
                 .build());
         return transactions;
     }
+
+
 }

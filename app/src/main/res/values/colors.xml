@@ -8,6 +8,5 @@
     <color name="white">#FFFFFF</color>
     <color name="primaryText">#0D47A1</color>
     <color name="secondaryText">#5E7FA6</color>
-    <color name="bottom_nav_tint">#1565C0</color>
     <color name="errorText">#D32F2F</color>
 </resources>
