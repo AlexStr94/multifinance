@@ -9,4 +9,6 @@
     <color name="primaryText">#0D47A1</color>
     <color name="secondaryText">#5E7FA6</color>
     <color name="errorText">#D32F2F</color>
+    <color name="incomeGreen">#2E7D32</color>
+    <color name="expenseRed">#C62828</color>
 </resources>

@@ -9,6 +9,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.multifinance.R;
 public abstract class BaseActivity extends AppCompatActivity {
 
+    protected abstract int getBottomNavItemId();
 
     /**
      * Настраивает общую шапку — логотип и кнопку уведомлений.
@@ -31,7 +32,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
         if (bottomNav == null) return;
 
-        int currentItemId = R.id.nav_dashboard;;
+        int currentItemId = getBottomNavItemId();
         bottomNav.setSelectedItemId(currentItemId);
 
         bottomNav.setOnItemSelectedListener(item -> {

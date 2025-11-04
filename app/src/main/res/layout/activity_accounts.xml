@@ -1,46 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:background="@color/background"
+    tools:context=".ui.AccountsActivity">
 
     <LinearLayout
-        android:id="@+id/topBar"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
         android:orientation="vertical"
-        android:paddingTop="20dp"
-        android:background="#6200EE"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
-
-        <TextView
-            android:id="@+id/headerText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ваши счета"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
-    </LinearLayout>
-    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="56dp"> <!-- отступ равен высоте topBar -->
+        android:padding="16dp">
 
-        <LinearLayout
-            android:id="@+id/accountsContainer"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
+        <include layout="@layout/view_top_bar" />
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:gravity="center_horizontal">
+            android:text="Счета"
+            android:textColor="@color/primaryText"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
 
-            <!-- Карточки счетов будут добавляться динамически через Java -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_accounts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="16dp"
+            tools:listitem="@layout/item_account" />
 
-        </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
+
+    <include layout="@layout/view_bottom_nav" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

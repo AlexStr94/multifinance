@@ -52,6 +52,7 @@ public class ApiRepository {
                 .amount(-50.0)
                 .date(LocalDateTime.now())
                 .description("Groceries")
+                .category("Авто")
                 .build());
         transactions.add(Transaction.builder()
                 .id("t2")
@@ -59,6 +60,7 @@ public class ApiRepository {
                 .amount(-20.0)
                 .date(LocalDateTime.now())
                 .description("Taxi")
+                .category("Авто")
                 .build());
         transactions.add(Transaction.builder()
                 .id("t3")
@@ -66,6 +68,7 @@ public class ApiRepository {
                 .amount(500.0)
                 .date(LocalDateTime.now())
                 .description("Salary")
+                .category("Авто")
                 .build());
         return transactions;
     }

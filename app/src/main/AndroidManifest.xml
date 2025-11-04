@@ -25,12 +25,15 @@
             android:name=".ui.DashboardActivity"
             android:exported="false" />
 
-
-
         <!-- Экран со счетами -->
     <activity
         android:name=".ui.AccountsActivity"
         android:exported="false" />
+
+        <activity android:name=".ui.TransactionsActivity"
+            android:exported="false" />
     </application>
+
+
 
 </manifest>

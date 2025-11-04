@@ -1,5 +1,6 @@
 package com.multifinance.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -31,10 +32,19 @@ public class DashboardActivity extends BaseActivity {
         tvIncome = findViewById(R.id.tv_income_value);
         tvExpense = findViewById(R.id.tv_expense_value);
 
+        // Карточка баланса
+        LinearLayout balanceCard = findViewById(R.id.balance_card);
+        balanceCard.setOnClickListener(v -> {
+            // Переход на страницу со счетами
+            Intent intent = new Intent(DashboardActivity.this, AccountsActivity.class);
+            startActivity(intent);
+        });
+
         // Временные данные
         tvBalance.setText("250 000 ₽");
 
         setupAnalyticsCard();
+
         LinearLayout newProductCard = findViewById(R.id.new_product_card);
         newProductCard.setOnClickListener(v ->
                 Toast.makeText(this, "Открытие новых продуктов пока в разработке", Toast.LENGTH_SHORT).show()
@@ -44,7 +54,6 @@ public class DashboardActivity extends BaseActivity {
         analyticsCard.setOnClickListener(v ->
                 Toast.makeText(this, "Раздел аналитики пока в разработке", Toast.LENGTH_SHORT).show()
         );
-
     }
 
     /**
@@ -91,5 +100,8 @@ public class DashboardActivity extends BaseActivity {
         tvExpense.setText(String.format("-%.2f ₽", expenses));
     }
 
-
+    @Override
+    protected int getBottomNavItemId() {
+        return R.id.nav_dashboard;
+    }
 }

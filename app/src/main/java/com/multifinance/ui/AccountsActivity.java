@@ -1,51 +1,63 @@
 package com.multifinance.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.multifinance.R;
 import com.multifinance.data.model.Account;
 import com.multifinance.data.repository.ApiRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class AccountsActivity extends AppCompatActivity {
+public class AccountsActivity extends BaseActivity {
 
-    private LinearLayout accountsContainer;
+    private RecyclerView recyclerAccounts;
+    private AccountsAdapter adapter;
     private ApiRepository repository;
 
+    private static final String TOKEN = "mock_token_123";
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_accounts);
+        setupHeader();
+        setupBottomNavigation();
 
-        accountsContainer = findViewById(R.id.accountsContainer);
+        recyclerAccounts = findViewById(R.id.recycler_accounts);
+        recyclerAccounts.setLayoutManager(new LinearLayoutManager(this));
+
         repository = new ApiRepository();
 
-        // Получаем токен, например из SharedPreferences
-        String token = getSharedPreferences("user_prefs", MODE_PRIVATE).getString("auth_token", "");
+        adapter = new AccountsAdapter(new ArrayList<>(), account -> {
+            Intent intent = new Intent(AccountsActivity.this, TransactionsActivity.class);
+            intent.putExtra("account_id", account.getId());
+            startActivity(intent);
+        });
+        recyclerAccounts.setAdapter(adapter);
 
-        List<Account> accounts = repository.getAccounts(token);
+        loadAccounts();
+    }
 
-        for (Account account : accounts) {
-            addAccountCard(account);
+    private void loadAccounts() {
+        try {
+            List<Account> accounts = repository.getAccounts(TOKEN);
+            adapter.setItems(accounts);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Toast.makeText(this, "Ошибка загрузки счетов", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void addAccountCard(Account account) {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View card = inflater.inflate(R.layout.account_card, accountsContainer, false);
-
-        TextView nameText = card.findViewById(R.id.accountNameTextView);
-        TextView balanceText = card.findViewById(R.id.accountBalanceTextView);
-
-        nameText.setText(account.getName());
-        balanceText.setText("$" + account.getBalance());
-
-        accountsContainer.addView(card);
+    @Override
+    protected int getBottomNavItemId() {
+        return R.id.nav_accounts;
     }
+
 }
