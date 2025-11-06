@@ -32,6 +32,8 @@
 
         <activity android:name=".ui.TransactionsActivity"
             android:exported="false" />
+
+        <activity android:name=".ui.AnalyticsActivity" android:exported="false" />
     </application>
 
 

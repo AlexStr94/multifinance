@@ -38,6 +38,7 @@ dependencies {
     // AndroidX и Material
     implementation(libs.appcompat)
     implementation(libs.material)
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.42")

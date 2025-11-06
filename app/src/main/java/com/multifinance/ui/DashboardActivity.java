@@ -50,10 +50,6 @@ public class DashboardActivity extends BaseActivity {
                 Toast.makeText(this, "Открытие новых продуктов пока в разработке", Toast.LENGTH_SHORT).show()
         );
 
-        LinearLayout analyticsCard = findViewById(R.id.analytics_card);
-        analyticsCard.setOnClickListener(v ->
-                Toast.makeText(this, "Раздел аналитики пока в разработке", Toast.LENGTH_SHORT).show()
-        );
     }
 
     /**
@@ -98,7 +94,14 @@ public class DashboardActivity extends BaseActivity {
         // Обновляем UI
         tvIncome.setText(String.format("+%.2f ₽", income));
         tvExpense.setText(String.format("-%.2f ₽", expenses));
+
+        LinearLayout analyticsCard = findViewById(R.id.analytics_card);
+        analyticsCard.setOnClickListener(v -> {
+            Intent intent = new Intent(DashboardActivity.this, AnalyticsActivity.class);
+            startActivity(intent);
+        });
     }
+
 
     @Override
     protected int getBottomNavItemId() {

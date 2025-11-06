@@ -44,7 +44,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_accounts) {
                 startActivity(new Intent(this, AccountsActivity.class));
             } else if (itemId == R.id.nav_analytics) {
-                Toast.makeText(this, "Раздел 'Аналитика' в разработке", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(this, AnalyticsActivity.class));
             } else if (itemId == R.id.nav_profile) {
                 Toast.makeText(this, "Раздел 'Профиль' в разработке", Toast.LENGTH_SHORT).show();
             }
