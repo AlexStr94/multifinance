@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/ic_gzhel_ornament"
+    tools:context=".ui.RegisterActivity">
+
+    <LinearLayout
+        android:id="@+id/card_container"
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="24dp"
+        android:background="@drawable/rounded_card_surface"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.15">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="20dp"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/ic_altyn_logo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Регистрация"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center_horizontal"
+            android:textColor="@color/primaryText" />
+
+        <EditText
+            android:id="@+id/et_username"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Имя пользователя"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="@color/primary" />
+
+        <EditText
+            android:id="@+id/et_email"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Эл. почта"
+            android:inputType="textEmailAddress"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="@color/primary" />
+
+        <EditText
+            android:id="@+id/et_phone"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Телефон"
+            android:inputType="phone"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="@color/primary" />
+
+        <EditText
+            android:id="@+id/et_password"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Пароль"
+            android:inputType="textPassword"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="@color/primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_register"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Создать аккаунт"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="20dp"
+            app:cornerRadius="50dp"
+            app:backgroundTint="@color/primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_back_login"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="У меня уже есть аккаунт"
+            android:textSize="16sp"
+            android:textColor="@color/primary"
+            android:layout_marginTop="12dp"
+            app:cornerRadius="50dp"
+            app:backgroundTint="@color/white"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="1dp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

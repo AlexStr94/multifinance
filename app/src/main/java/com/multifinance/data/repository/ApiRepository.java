@@ -1,27 +1,114 @@
 package com.multifinance.data.repository;
 
+import android.util.Log;
+
 import com.multifinance.data.model.Account;
 import com.multifinance.data.model.Transaction;
 import com.multifinance.data.model.User;
+import com.multifinance.data.remote.ApiClient;
+import com.multifinance.data.remote.AuthApi;
+import com.multifinance.data.remote.LoginRequest;
+import com.multifinance.data.remote.RegisterRequest;
+import com.multifinance.data.remote.AuthResponse;
+import com.multifinance.data.remote.RegisterResponse;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 public class ApiRepository {
-
     public static final String FILTER_ALL = "all";
 
-    // Моковая авторизация
-    public User login(String username, String password) {
-        return User.builder()
-                .id("1")
-                .name(username)
-                .token("mock_token_123")
-                .build();
+    private final AuthApi authApi;
+
+    public ApiRepository() {
+        authApi = ApiClient.getClient().create(AuthApi.class);
     }
 
-    // Получение списка счетов
+    /**
+     * 🔐 Авторизация пользователя (асинхронно)
+     */
+    public void loginAsync(String email, String password, AuthCallback callback) {
+        LoginRequest request = new LoginRequest(email, password);
+        Call<AuthResponse> call = authApi.login(request);
+
+        call.enqueue(new Callback<AuthResponse>() {
+            @Override
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    AuthResponse authResponse = response.body();
+
+                    User user = new User();
+                    user.setId(String.valueOf(authResponse.getId()));
+                    user.setUsername(authResponse.getUsername());
+                    user.setEmail(authResponse.getEmail());
+                    user.setPhone(authResponse.getPhone());
+                    user.setRoles(authResponse.getRoles());
+                    user.setToken(authResponse.getToken());
+
+                    callback.onSuccess(user);
+                } else {
+                    String errorMsg = "Ошибка входа: " + response.code();
+                    Log.e("ApiRepository", errorMsg);
+                    callback.onError(errorMsg);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                Log.e("ApiRepository", "Ошибка сети при входе", t);
+                callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * 🧾 Регистрация пользователя (асинхронно)
+     */
+    public void register(String username, String email, String phone, List<String> roles,
+                         String password, AuthCallback callback) {
+
+        RegisterRequest request = new RegisterRequest(username, email, phone, roles, password);
+        Call<RegisterResponse> call = authApi.register(request);
+
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if (response.isSuccessful()) {
+                    // Сервер возвращает 200 OK без тела — считаем успехом
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setEmail(email);
+                    user.setPhone(phone);
+                    user.setRoles(roles);
+                    callback.onSuccess(user);
+                } else {
+                    String errorMsg = "Ошибка регистрации: " + response.code();
+                    Log.e("ApiRepository", errorMsg);
+                    callback.onError(errorMsg);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                Log.e("ApiRepository", "Ошибка сети при регистрации", t);
+                callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Интерфейс обратного вызова для авторизации/регистрации
+     */
+    public interface AuthCallback {
+        void onSuccess(User user);
+        void onError(String message);
+    }
+
     public List<Account> getAccounts(String token) {
         List<Account> accounts = new ArrayList<>();
         accounts.add(Account.builder()
@@ -72,6 +159,4 @@ public class ApiRepository {
                 .build());
         return transactions;
     }
-
-
 }

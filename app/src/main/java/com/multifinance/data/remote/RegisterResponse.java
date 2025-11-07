@@ -1,24 +1,16 @@
-package com.multifinance.data.model;
-
-import java.util.List;
+package com.multifinance.data.remote;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class User {
+public class RegisterResponse {
     private String id;
     private String username;
-    private String email;
-    private String phone;
-    private List<String> roles;
     private String token;
 }
-

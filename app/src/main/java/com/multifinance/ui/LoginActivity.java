@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -36,25 +37,21 @@ public class LoginActivity extends AppCompatActivity {
         errorTextView = new TextView(this);
         errorTextView.setTextColor(ContextCompat.getColor(this, R.color.errorText));
 
-        // Добавляем errorTextView в контейнер формы под паролем
+        // Добавляем errorTextView под полем пароля
         ((View) passwordEditText.getParent()).post(() -> {
-            ((View) passwordEditText.getParent()).requestLayout();
-            ((android.widget.LinearLayout) passwordEditText.getParent()).addView(errorTextView,
-                    ((android.widget.LinearLayout) passwordEditText.getParent()).indexOfChild(passwordEditText) + 1);
+            ((android.widget.LinearLayout) passwordEditText.getParent()).addView(errorTextView);
         });
 
         Button loginButton = findViewById(R.id.btn_login);
         Button registerButton = findViewById(R.id.btn_register);
 
-        // Делаем кнопку регистрации неактивной
-        registerButton.setEnabled(false);
-
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                login();
-            }
+        registerButton.setEnabled(true);
+        registerButton.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
         });
+
+        loginButton.setOnClickListener(v -> login());
     }
 
     private void login() {
@@ -66,27 +63,35 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        User user = repository.login(email, password);
-        if (user != null && user.getToken() != null && !user.getToken().isEmpty()) {
-            saveToken(user.getToken());
-            errorTextView.setText("");
+        // Асинхронный вызов API
+        repository.loginAsync(email, password, new ApiRepository.AuthCallback() {
+            @Override
+            public void onSuccess(User user) {
+                runOnUiThread(() -> {
+                    if (user != null && user.getToken() != null && !user.getToken().isEmpty()) {
+                        saveToken(user.getToken());
+                        errorTextView.setText("");
+                        Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        errorTextView.setText("Ошибка: пустой токен");
+                    }
+                });
+            }
 
-            // Переход на главный экран
-            Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
-            startActivity(intent);
-            finish();
-        } else {
-            errorTextView.setText("Неверный логин или пароль");
-        }
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> errorTextView.setText(message != null ? message : "Ошибка входа"));
+            }
+        });
     }
 
     private void saveToken(String token) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("auth_token", token);
-
         long expiryTime = System.currentTimeMillis() + (24 * 60 * 60 * 1000); // 24 часа
         editor.putLong("token_expiry", expiryTime);
-
         editor.apply();
     }
 
