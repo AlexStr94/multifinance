@@ -42,7 +42,7 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
         Transaction t = transactions.get(position);
 
         holder.tvDescription.setText(t.getTransactionInformation());
-        holder.tvAmount.setText(String.format("%.2f ₽", t.getAmount()));
+        holder.tvAmount.setText(String.format("%.2f ₽", t.getAmountValue()));
 
         // Цвет: доход зелёный, расход красный
         if (t.getAmountValue() >= 0) {
