@@ -42,9 +42,11 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
         return items.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvCategory, tvAmount;
-        ViewHolder(View itemView) {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView tvCategory;
+        TextView tvAmount;
+
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCategory = itemView.findViewById(R.id.tv_category);
             tvAmount = itemView.findViewById(R.id.tv_amount);

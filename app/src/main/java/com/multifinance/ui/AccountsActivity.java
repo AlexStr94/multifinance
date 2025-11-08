@@ -39,7 +39,6 @@ public class AccountsActivity extends BaseActivity {
         tvEmpty = findViewById(R.id.tv_empty_accounts);
 
         recyclerAccounts.setLayoutManager(new LinearLayoutManager(this));
-
         adapter = new AccountsAdapter(new ArrayList<>(), account -> {
             Intent intent = new Intent(AccountsActivity.this, TransactionsActivity.class);
             intent.putExtra("account_id", account.getId());
@@ -48,7 +47,6 @@ public class AccountsActivity extends BaseActivity {
         recyclerAccounts.setAdapter(adapter);
 
         repository = new ApiRepository();
-
         loadAccounts();
     }
 
@@ -57,35 +55,30 @@ public class AccountsActivity extends BaseActivity {
         recyclerAccounts.setVisibility(View.GONE);
         tvEmpty.setVisibility(View.GONE);
 
-        new Thread(() -> {
-            try {
-                // 🔹 Токен теперь берётся внутри репозитория
-                List<Account> accounts = repository.getAccounts(this);
+        repository.getAccountsAsync(this, new ApiRepository.AccountsCallback() {
+            @Override
+            public void onSuccess(List<Account> accounts) {
+                progressBar.setVisibility(View.GONE);
 
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-
-                    if (accounts == null || accounts.isEmpty()) {
-                        tvEmpty.setVisibility(View.VISIBLE);
-                        recyclerAccounts.setVisibility(View.GONE);
-                    } else {
-                        adapter.setItems(accounts);
-                        recyclerAccounts.setVisibility(View.VISIBLE);
-                        tvEmpty.setVisibility(View.GONE);
-                    }
-                });
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
+                if (accounts == null || accounts.isEmpty()) {
                     tvEmpty.setVisibility(View.VISIBLE);
-                    Toast.makeText(this, "Ошибка загрузки счетов", Toast.LENGTH_SHORT).show();
-                });
+                    recyclerAccounts.setVisibility(View.GONE);
+                } else {
+                    adapter.setItems(accounts);
+                    recyclerAccounts.setVisibility(View.VISIBLE);
+                    tvEmpty.setVisibility(View.GONE);
+                }
             }
-        }).start();
-    }
 
+            @Override
+            public void onError(String message) {
+                progressBar.setVisibility(View.GONE);
+                tvEmpty.setVisibility(View.VISIBLE);
+                recyclerAccounts.setVisibility(View.GONE);
+                Toast.makeText(AccountsActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     @Override
     protected int getBottomNavItemId() {

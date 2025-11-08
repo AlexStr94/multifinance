@@ -3,6 +3,7 @@ package com.multifinance.data.remote;
 import com.google.gson.JsonObject;
 import com.multifinance.data.model.Account;
 import com.multifinance.data.model.Bank;
+import com.multifinance.data.model.Transaction;
 
 import java.util.List;
 
@@ -30,5 +31,11 @@ public interface MiltiBankApi {
     Call<Void> createConsent(
             @Header("Authorization") String token,
             @Body JsonObject request
+    );
+
+    @POST("/api/transactions/")
+    Call<List<Transaction>> getTransactions(
+            @Header("Authorization") String token,
+            @Body TransactionRequest request
     );
 }

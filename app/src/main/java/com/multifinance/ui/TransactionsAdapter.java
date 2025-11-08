@@ -41,19 +41,19 @@ public class TransactionsAdapter extends RecyclerView.Adapter<TransactionsAdapte
     public void onBindViewHolder(@NonNull TransactionViewHolder holder, int position) {
         Transaction t = transactions.get(position);
 
-        holder.tvDescription.setText(t.getDescription());
+        holder.tvDescription.setText(t.getTransactionInformation());
         holder.tvAmount.setText(String.format("%.2f ₽", t.getAmount()));
 
         // Цвет: доход зелёный, расход красный
-        if (t.getAmount() >= 0) {
+        if (t.getAmountValue() >= 0) {
             holder.tvAmount.setTextColor(holder.itemView.getContext().getColor(R.color.incomeGreen));
         } else {
             holder.tvAmount.setTextColor(holder.itemView.getContext().getColor(R.color.expenseRed));
         }
 
-        if (t.getDate() != null) {
+        if (t.getValueDateTime() != null) {
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            holder.tvDate.setText(t.getDate().format(fmt));
+            holder.tvDate.setText(t.getValueDateTime());
         } else {
             holder.tvDate.setText("—");
         }

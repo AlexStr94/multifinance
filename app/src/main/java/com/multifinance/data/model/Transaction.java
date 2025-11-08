@@ -1,21 +1,38 @@
 package com.multifinance.data.model;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Transaction {
-    private String id;
+
     private String accountId;
-    private double amount;
-    private LocalDateTime date;
-    private String description;
-    private String category;
+
+    private String amount;
+
+    private String valueDateTime;
+    private String transactionInformation;
+    private String creditDebitIndicator;
+
+    public double getAmountValue() {
+        try {
+            return Double.parseDouble(amount);
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    public boolean isCredit() {
+        return "Credit".equalsIgnoreCase(creditDebitIndicator);
+    }
+
+    public boolean isDebit() {
+        return "Debit".equalsIgnoreCase(creditDebitIndicator);
+    }
 }

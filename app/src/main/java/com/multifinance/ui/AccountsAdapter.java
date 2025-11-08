@@ -42,8 +42,8 @@ public class AccountsAdapter extends RecyclerView.Adapter<AccountsAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull AccountsAdapter.ViewHolder holder, int position) {
         Account acc = items.get(position);
-        holder.tvName.setText(acc.getName());
-        holder.tvBalance.setText("Баланс: " + acc.getBalance() + " ₽");
+        holder.tvName.setText(acc.getDisplayName());
+        holder.tvBalance.setText(String.format("Баланс: %.2f ₽", acc.getBalance()));
         holder.itemView.setOnClickListener(v -> listener.onClick(acc));
     }
 

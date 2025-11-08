@@ -15,74 +15,56 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
+        android:layout_marginTop="8dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:weightSum="3">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Счёт:"
-            android:textColor="@color/secondaryText"
-            android:layout_marginEnd="8dp" />
-
+        <!-- Выбор счета -->
         <Spinner
             android:id="@+id/spinner_account"
             android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
-    </LinearLayout>
+            android:spinnerMode="dropdown" />
 
-    <!-- Категория -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Категория:"
-            android:textColor="@color/secondaryText"
-            android:layout_marginEnd="8dp" />
-
+        <!-- Выбор категории -->
         <Spinner
             android:id="@+id/spinner_category"
             android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
-    </LinearLayout>
-
-    <!-- Диапазон дат -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Период:"
-            android:textColor="@color/secondaryText"
+            android:spinnerMode="dropdown"
+            android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp" />
 
-        <TextView
-            android:id="@+id/tv_date_range"
+        <!-- Диапазон дат -->
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Текущий месяц"
-            android:textColor="@color/primaryText" />
-
-        <ImageButton
-            android:id="@+id/btn_date_picker"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_calendar"
-            android:contentDescription="Выбрать период"
-            app:tint="@color/primaryText" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_date_range"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="01.11.2025 — 30.11.2025"
+                android:textColor="@color/primaryText"
+                android:textSize="14sp" />
+
+            <ImageButton
+                android:id="@+id/btn_date_picker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_calendar"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Выбрать дату" />
+
+        </LinearLayout>
     </LinearLayout>
+
 
 </LinearLayout>

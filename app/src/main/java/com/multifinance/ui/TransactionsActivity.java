@@ -16,6 +16,7 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.multifinance.R;
 import com.multifinance.data.model.Account;
 import com.multifinance.data.model.Transaction;
+import com.multifinance.data.remote.TransactionRequest;
 import com.multifinance.data.repository.ApiRepository;
 
 import java.time.Instant;
@@ -31,7 +32,7 @@ import java.util.Set;
 
 /**
  * Экран транзакций с фильтрами по счёту, категории и периоду.
- * Фильтрация выполняется в ApiRepository.
+ * Работает с новым асинхронным ApiRepository.
  */
 public class TransactionsActivity extends BaseActivity {
 
@@ -46,22 +47,19 @@ public class TransactionsActivity extends BaseActivity {
     private List<Transaction> currentTransactions = new ArrayList<>();
     private TransactionsAdapter adapter;
 
-    private static final String TOKEN = "mock_token_123";
-
-    // Текущие фильтры
     private String selectedAccountId = ApiRepository.FILTER_ALL;
     private String selectedCategory = ApiRepository.FILTER_ALL;
-    private LocalDateTime selectedStart = null;
-    private LocalDateTime selectedEnd = null;
+    private LocalDateTime selectedStart;
+    private LocalDateTime selectedEnd;
+
+    private boolean showExpenses = true;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transactions);
-        String passedAccountId = getIntent().getStringExtra("account_id");
-        if (passedAccountId != null) {
-            selectedAccountId = passedAccountId;
-        }
+
         setupHeader();
         setupBottomNavigation();
 
@@ -77,52 +75,38 @@ public class TransactionsActivity extends BaseActivity {
         adapter = new TransactionsAdapter(new ArrayList<>());
         recyclerTransactions.setAdapter(adapter);
 
-        // по умолчанию текущий месяц
         setDefaultMonthRange();
 
-        // слушатели
         btnDatePicker.setOnClickListener(v -> showRangePicker());
 
         spinnerAccount.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0) {
-                    selectedAccountId = ApiRepository.FILTER_ALL;
-                } else {
+                if (position == 0) selectedAccountId = ApiRepository.FILTER_ALL;
+                else {
                     String display = (String) spinnerAccount.getSelectedItem();
                     int open = display.lastIndexOf('(');
                     int close = display.lastIndexOf(')');
-                    if (open != -1 && close != -1 && close > open) {
-                        selectedAccountId = display.substring(open + 1, close);
-                    } else {
-                        selectedAccountId = ApiRepository.FILTER_ALL;
-                    }
+                    selectedAccountId = (open != -1 && close > open) ? display.substring(open + 1, close) : ApiRepository.FILTER_ALL;
                 }
                 loadTransactionsWithFilters();
             }
 
-            @Override
-            public void onNothingSelected(android.widget.AdapterView<?> parent) { }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
         });
 
         spinnerCategory.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
                 String sel = (String) spinnerCategory.getSelectedItem();
-                if (sel == null || sel.equalsIgnoreCase("Все категории")) {
-                    selectedCategory = ApiRepository.FILTER_ALL;
-                } else {
-                    selectedCategory = sel;
-                }
+                selectedCategory = (sel == null || sel.equalsIgnoreCase("Все категории")) ? ApiRepository.FILTER_ALL : sel;
                 loadTransactionsWithFilters();
             }
 
-            @Override
-            public void onNothingSelected(android.widget.AdapterView<?> parent) { }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
         });
 
-        // начальная загрузка данных
-        loadInitialData();
+        loadAccounts();
     }
 
     private void setDefaultMonthRange() {
@@ -141,68 +125,145 @@ public class TransactionsActivity extends BaseActivity {
         return start.format(f) + " — " + end.format(f);
     }
 
-    private void loadInitialData() {
-        // 1. Счета
-        accounts = repository.getAccounts(this);
-        List<String> accountDisplay = new ArrayList<>();
-        accountDisplay.add("Все счета");
-        for (Account a : accounts) {
-            accountDisplay.add(a.getName() + " (" + a.getId() + ")");
-        }
-        ArrayAdapter<String> accountsAdapter =
-                new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, accountDisplay);
-        accountsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerAccount.setAdapter(accountsAdapter);
+    private void loadAccounts() {
+        repository.getAccountsAsync(this, new ApiRepository.AccountsCallback() {
+            @Override
+            public void onSuccess(List<Account> accountList) {
+                accounts = accountList;
+                List<String> display = new ArrayList<>();
+                display.add("Все счета");
+                for (Account a : accounts) display.add(a.getDisplayName());
 
-        // 2. Первичная загрузка транзакций и категорий
-        loadTransactionsWithFiltersAndPopulateCategories();
+                ArrayAdapter<String> accountsAdapter = new ArrayAdapter<>(TransactionsActivity.this,
+                        android.R.layout.simple_spinner_item, display);
+                accountsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerAccount.setAdapter(accountsAdapter);
+
+                loadTransactionsAndPopulateCategories();
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(TransactionsActivity.this, "Ошибка загрузки счетов: " + message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadTransactionsWithFilters() {
-        try {
-            List<Transaction> result = repository.getTransactions(
-                    selectedAccountId != null ? selectedAccountId : ApiRepository.FILTER_ALL,
-                    selectedStart,
-                    selectedEnd,
-                    selectedCategory != null ? selectedCategory : ApiRepository.FILTER_ALL
+        if (accounts.isEmpty()) return;
+
+        List<Transaction> allTransactions = new ArrayList<>();
+        int[] remaining = {accounts.size()};
+
+        for (Account account : accounts) {
+            if (!selectedAccountId.equals(ApiRepository.FILTER_ALL) &&
+                    !selectedAccountId.equals(account.getId())) {
+                remaining[0]--;
+                continue;
+            }
+
+            TransactionRequest request = new TransactionRequest(
+                    account.getId(),
+                    account.getBankName(),
+                    formatForRequest(selectedStart),
+                    formatForRequest(selectedEnd),
+                    0,  // 0 или 1 — зависит от API, оставляем как было
+                    100
             );
-            if (result == null) result = new ArrayList<>();
-            currentTransactions = result;
-            adapter.setItems(currentTransactions);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Toast.makeText(this, "Ошибка загрузки транзакций", Toast.LENGTH_SHORT).show();
+
+            repository.getTransactionsAsync(this, request, new ApiRepository.TransactionsCallback() {
+                @Override
+                public void onSuccess(List<Transaction> transactions) {
+                    if (transactions != null) {
+                        for (Transaction t : transactions) {
+                            // Добавляем только транзакции, которые соответствуют выбранному типу
+                            if ((showExpenses && t.isDebit()) || (!showExpenses && t.isCredit())) {
+                                allTransactions.add(t);
+                            }
+                        }
+                    }
+                    remaining[0]--;
+                    if (remaining[0] == 0) applyCategoryFilter(allTransactions);
+                }
+
+                @Override
+                public void onError(String message) {
+                    remaining[0]--;
+                    if (remaining[0] == 0) applyCategoryFilter(allTransactions);
+                }
+            });
         }
     }
 
-    private void loadTransactionsWithFiltersAndPopulateCategories() {
-        try {
-            List<Transaction> result = repository.getTransactions(
-                    ApiRepository.FILTER_ALL,
-                    selectedStart,
-                    selectedEnd,
-                    ApiRepository.FILTER_ALL
+
+    private void applyCategoryFilter(List<Transaction> allTransactions) {
+        List<Transaction> filtered = new ArrayList<>();
+        for (Transaction t : allTransactions) {
+            if (selectedCategory.equals(ApiRepository.FILTER_ALL) ||
+                    (t.getTransactionInformation() != null &&
+                            t.getTransactionInformation().equals(selectedCategory))) {
+                filtered.add(t);
+            }
+        }
+
+        runOnUiThread(() -> {
+            currentTransactions = filtered;
+            adapter.setItems(currentTransactions);
+        });
+    }
+
+    private void loadTransactionsAndPopulateCategories() {
+        if (accounts.isEmpty()) return;
+
+        List<Transaction> allTransactions = new ArrayList<>();
+        Set<String> categories = new LinkedHashSet<>();
+        categories.add("Все категории");
+
+        int[] remaining = {accounts.size()};
+
+        for (Account account : accounts) {
+            TransactionRequest request = new TransactionRequest(
+                    account.getId(),
+                    account.getBankName(),
+                    formatForRequest(selectedStart),
+                    formatForRequest(selectedEnd),
+                    0,
+                    200
             );
-            if (result == null) result = new ArrayList<>();
-            currentTransactions = result;
+
+            repository.getTransactionsAsync(this, request, new ApiRepository.TransactionsCallback() {
+                @Override
+                public void onSuccess(List<Transaction> transactions) {
+                    if (transactions != null) {
+                        allTransactions.addAll(transactions);
+                        for (Transaction t : transactions) {
+                            if (t.getTransactionInformation() != null && !t.getTransactionInformation().trim().isEmpty())
+                                categories.add(t.getTransactionInformation());
+                        }
+                    }
+                    remaining[0]--;
+                    if (remaining[0] == 0) updateUI(allTransactions, categories);
+                }
+
+                @Override
+                public void onError(String message) {
+                    remaining[0]--;
+                    if (remaining[0] == 0) updateUI(allTransactions, categories);
+                }
+            });
+        }
+    }
+
+    private void updateUI(List<Transaction> transactions, Set<String> categories) {
+        runOnUiThread(() -> {
+            currentTransactions = transactions;
             adapter.setItems(currentTransactions);
 
-            // формируем категории
-            Set<String> categories = new LinkedHashSet<>();
-            categories.add("Все категории");
-            for (Transaction t : currentTransactions) {
-                if (t.getCategory() != null && !t.getCategory().trim().isEmpty()) {
-                    categories.add(t.getCategory());
-                }
-            }
-            ArrayAdapter<String> catAdapter =
-                    new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new ArrayList<>(categories));
+            ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_item, new ArrayList<>(categories));
             catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerCategory.setAdapter(catAdapter);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Toast.makeText(this, "Ошибка загрузки транзакций", Toast.LENGTH_SHORT).show();
-        }
+        });
     }
 
     private void showRangePicker() {
@@ -238,9 +299,14 @@ public class TransactionsActivity extends BaseActivity {
         }
     }
 
+    private String formatForRequest(LocalDateTime dt) {
+        return String.format("%02d %02d %d %02d:%02d",
+                dt.getDayOfMonth(), dt.getMonthValue(), dt.getYear(),
+                dt.getHour(), dt.getMinute());
+    }
+
     @Override
     protected int getBottomNavItemId() {
         return R.id.nav_accounts;
     }
-
 }

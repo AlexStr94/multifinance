@@ -2,6 +2,7 @@ package com.multifinance.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -9,18 +10,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.multifinance.R;
 import com.multifinance.data.model.Account;
 import com.multifinance.data.model.Transaction;
+import com.multifinance.data.remote.TransactionRequest;
 import com.multifinance.data.repository.ApiRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Главный экран (Дашборд) — отображает общий баланс, доходы, расходы
- * и предлагает добавить банк, если аккаунты отсутствуют.
- */
 public class DashboardActivity extends BaseActivity {
 
     private TextView tvBalance;
@@ -57,8 +56,7 @@ public class DashboardActivity extends BaseActivity {
         progressBar = findViewById(R.id.progress_dashboard);
 
         btnAddBank.setOnClickListener(v -> {
-            Intent intent = new Intent(DashboardActivity.this, AddBanksActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(DashboardActivity.this, AddBanksActivity.class));
         });
     }
 
@@ -68,47 +66,31 @@ public class DashboardActivity extends BaseActivity {
         loadAccountsAndUpdateUI();
     }
 
-    /**
-     * Загружает список счетов пользователя и обновляет интерфейс.
-     */
     private void loadAccountsAndUpdateUI() {
         progressBar.setVisibility(View.VISIBLE);
 
-        new Thread(() -> {
-            try {
-                // Теперь getAccounts сам получает токен из SharedPreferences
-                List<Account> accounts = repository.getAccounts(this);
+        repository.getAccountsAsync(this, new ApiRepository.AccountsCallback() {
+            @Override
+            public void onSuccess(List<Account> accounts) {
+                if (accounts == null || accounts.isEmpty()) {
+                    runOnUiThread(DashboardActivity.this::showAddBankButton);
+                } else {
+                    runOnUiThread(() -> showDashboardContent(accounts));
+                }
+                progressBar.setVisibility(View.GONE);
+            }
 
+            @Override
+            public void onError(String message) {
                 runOnUiThread(() -> {
                     progressBar.setVisibility(View.GONE);
-
-                    if (accounts == null) {
-                        // Токен не найден → отправляем на логин
-                        Toast.makeText(this, "Сессия истекла, пожалуйста, войдите снова", Toast.LENGTH_LONG).show();
-                        startActivity(new Intent(this, LoginActivity.class));
-                        finish();
-                        return;
-                    }
-
-                    if (accounts.isEmpty()) {
-                        showAddBankButton();
-                    } else {
-                        showDashboardContent(accounts);
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(this, "Ошибка загрузки счетов", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DashboardActivity.this, "Ошибка загрузки счетов: " + message, Toast.LENGTH_SHORT).show();
+                    showAddBankButton();
                 });
             }
-        }).start();
+        });
     }
 
-    /**
-     * Показывает экран, если у пользователя нет подключённых банков.
-     */
     private void showAddBankButton() {
         balanceCard.setVisibility(View.GONE);
         analyticsCard.setVisibility(View.GONE);
@@ -118,9 +100,6 @@ public class DashboardActivity extends BaseActivity {
         btnAddBank.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Показывает экран с балансом, аналитикой и другими разделами.
-     */
     private void showDashboardContent(List<Account> accounts) {
         balanceCard.setVisibility(View.VISIBLE);
         analyticsCard.setVisibility(View.VISIBLE);
@@ -137,58 +116,89 @@ public class DashboardActivity extends BaseActivity {
         tvBalance.setText(String.format("%.2f ₽", totalBalance));
 
         balanceCard.setOnClickListener(v -> {
-            Intent intent = new Intent(DashboardActivity.this, AccountsActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(DashboardActivity.this, AccountsActivity.class));
         });
 
-        setupAnalyticsCard();
+        setupAnalyticsCard(accounts);
     }
 
-    /**
-     * Подсчёт и отображение доходов / расходов за текущий месяц.
-     */
-    private void setupAnalyticsCard() {
+    private void setupAnalyticsCard(List<Account> accounts) {
         LocalDateTime startOfMonth = LocalDateTime.now()
                 .withDayOfMonth(1)
                 .withHour(0).withMinute(0).withSecond(0).withNano(0);
 
         LocalDateTime endOfMonth = LocalDateTime.now()
                 .withDayOfMonth(LocalDateTime.now().toLocalDate().lengthOfMonth())
-                .withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+                .withHour(23).withMinute(59).withSecond(59).withNano(999_999_999);
 
-        new Thread(() -> {
-            List<Transaction> transactions = repository.getTransactions(
-                    ApiRepository.FILTER_ALL,
-                    startOfMonth,
-                    endOfMonth,
-                    ApiRepository.FILTER_ALL
+        progressBar.setVisibility(View.VISIBLE);
+
+        final double[] totalIncome = {0.0};
+        final double[] totalExpense = {0.0};
+        final int[] totalTransactions = {0};
+        final int[] accountsProcessed = {0};
+
+        for (Account account : accounts) {
+            TransactionRequest request = new TransactionRequest(
+                    account.getId(),
+                    account.getBankName(),
+                    formatForRequest(startOfMonth),
+                    formatForRequest(endOfMonth),
+                    1,
+                    100
             );
 
-            double income = 0;
-            double expenses = 0;
+            Gson gson = new Gson();
+            Log.d("AnalyticsActivity", "Отправляем TransactionRequest: " + gson.toJson(request));
 
-            for (Transaction t : transactions) {
-                if (t.getAmount() > 0) income += t.getAmount();
-                else expenses += Math.abs(t.getAmount());
-            }
 
-            double finalIncome = income;
-            double finalExpenses = expenses;
+            repository.getTransactionsAsync(this, request, new ApiRepository.TransactionsCallback() {
+                @Override
+                public void onSuccess(List<Transaction> transactions) {
+                    if (transactions != null) {
+                        totalTransactions[0] += transactions.size();
 
-            runOnUiThread(() -> {
-                tvIncome.setText(String.format("+%.2f ₽", finalIncome));
-                tvExpense.setText(String.format("-%.2f ₽", finalExpenses));
+                        for (Transaction tx : transactions) {
+                            double amount = tx.getAmountValue();
+                            if (tx.isCredit()) {
+                                totalIncome[0] += amount;
+                            } else if (tx.isDebit()) {
+                                totalExpense[0] += Math.abs(amount);
+                            }
+                        }
+                    }
+                    accountsProcessed[0]++;
+                    if (accountsProcessed[0] == accounts.size()) {
+                        // обновляем UI
+                        runOnUiThread(() -> {
+                            progressBar.setVisibility(View.GONE);
+                            tvIncome.setText(String.format("+%.2f ₽", totalIncome[0]));
+                            tvExpense.setText(String.format("-%.2f ₽", totalExpense[0]));
+                            // Можно показать количество транзакций, например в tvBalance или отдельном TextView
+                            tvBalance.setText(String.format("%.2f ₽ (%d транзакций)", totalIncome[0] - totalExpense[0], totalTransactions[0]));
+                        });
+                    }
+                }
 
-                analyticsCard.setOnClickListener(v -> {
-                    Intent intent = new Intent(DashboardActivity.this, AnalyticsActivity.class);
-                    startActivity(intent);
-                });
+                @Override
+                public void onError(String message) {
+                    accountsProcessed[0]++;
+                    if (accountsProcessed[0] == accounts.size()) {
+                        runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                    }
+                }
             });
-        }).start();
+        }
     }
+
 
     @Override
     protected int getBottomNavItemId() {
         return R.id.nav_dashboard;
+    }
+
+    private String formatForRequest(LocalDateTime dt) {
+        return String.format("%02d %02d %d %02d:%02d",
+                dt.getDayOfMonth(), dt.getMonthValue(), dt.getYear(), dt.getHour(), dt.getMinute());
     }
 }

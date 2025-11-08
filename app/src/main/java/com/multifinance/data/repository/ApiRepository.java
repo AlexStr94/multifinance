@@ -17,15 +17,14 @@ import com.multifinance.data.remote.LoginRequest;
 import com.multifinance.data.remote.RegisterRequest;
 import com.multifinance.data.remote.AuthResponse;
 import com.multifinance.data.remote.RegisterResponse;
+import com.multifinance.data.remote.TransactionRequest;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 public class ApiRepository {
     public static final String FILTER_ALL = "all";
 
@@ -35,9 +34,7 @@ public class ApiRepository {
         authApi = ApiClient.getClient().create(MiltiBankApi.class);
     }
 
-    /**
-     * 🔐 Авторизация пользователя (асинхронно)
-     */
+    // ===================== Авторизация =====================
     public void loginAsync(String email, String password, AuthCallback callback) {
         LoginRequest request = new LoginRequest(email, password);
         Call<AuthResponse> call = authApi.login(request);
@@ -58,23 +55,18 @@ public class ApiRepository {
 
                     callback.onSuccess(user);
                 } else {
-                    String errorMsg = "Ошибка входа: " + response.code();
-                    Log.e("ApiRepository", errorMsg);
-                    callback.onError(errorMsg);
+                    callback.onError("Ошибка входа: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
-                Log.e("ApiRepository", "Ошибка сети при входе", t);
                 callback.onError("Ошибка сети: " + t.getMessage());
             }
         });
     }
 
-    /**
-     * 🧾 Регистрация пользователя (асинхронно)
-     */
+    // ===================== Регистрация =====================
     public void register(String username, String email, String phone, List<String> roles,
                          String password, AuthCallback callback) {
 
@@ -85,7 +77,6 @@ public class ApiRepository {
             @Override
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
                 if (response.isSuccessful()) {
-                    // Сервер возвращает 200 OK без тела — считаем успехом
                     User user = new User();
                     user.setUsername(username);
                     user.setEmail(email);
@@ -93,109 +84,106 @@ public class ApiRepository {
                     user.setRoles(roles);
                     callback.onSuccess(user);
                 } else {
-                    String errorMsg = "Ошибка регистрации: " + response.code();
-                    Log.e("ApiRepository", errorMsg);
-                    callback.onError(errorMsg);
+                    callback.onError("Ошибка регистрации: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
-                Log.e("ApiRepository", "Ошибка сети при регистрации", t);
                 callback.onError("Ошибка сети: " + t.getMessage());
             }
         });
     }
 
+    // ===================== Банки =====================
     public void getBanksAsync(Context context, BanksCallback callback) {
         String token = getToken(context);
-
         if (token == null || token.isEmpty()) {
-            callback.onError("Отсутствует токен авторизации. Пожалуйста, войдите снова.");
+            callback.onError("Отсутствует токен авторизации.");
             return;
         }
 
-        MiltiBankApi api = ApiClient.getClient().create(MiltiBankApi.class);
-        Call<List<Bank>> call = api.getBanks("Bearer " + token);
-
+        Call<List<Bank>> call = authApi.getBanks("Bearer " + token);
         call.enqueue(new Callback<List<Bank>>() {
             @Override
             public void onResponse(Call<List<Bank>> call, Response<List<Bank>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     callback.onSuccess(response.body());
                 } else {
-                    String errorMsg = "Ошибка загрузки банков: " + response.code();
-                    Log.e("ApiRepository", errorMsg);
-                    callback.onError(errorMsg);
+                    callback.onError("Ошибка загрузки банков: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(Call<List<Bank>> call, Throwable t) {
-                Log.e("ApiRepository", "Ошибка сети при получении банков", t);
                 callback.onError("Ошибка сети: " + t.getMessage());
             }
         });
     }
 
-    @Nullable
-    private static String getToken(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
-        String token = prefs.getString("auth_token", null);
-        return token;
-    }
-
-
-    /**
-     * Получает список счетов текущего пользователя с сервера.
-     * Возвращает пустой список в случае ошибки.
-     */
-    /**
-     * Получает список счетов текущего пользователя с сервера.
-     * Возвращает пустой список в случае ошибки.
-     */
-    public List<Account> getAccounts(Context context) {
-        List<Account> accounts = new ArrayList<>();
-
+    // ===================== Счета =====================
+    public void getAccountsAsync(Context context, AccountsCallback callback) {
         String token = getToken(context);
         if (token == null || token.isEmpty()) {
-            Log.e("ApiRepository", "❌ Отсутствует токен авторизации. Пользователь не вошёл в систему.");
-            return accounts;
+            callback.onError("Отсутствует токен авторизации.");
+            return;
         }
 
-        try {
-            Call<List<Account>> call = authApi.getAccounts("Bearer " + token);
-            Response<List<Account>> response = call.execute();
-
-            if (response.isSuccessful() && response.body() != null) {
-                accounts = response.body();
-            } else {
-                Log.e("ApiRepository", "Ошибка загрузки счетов: " + response.code());
+        Call<List<Account>> call = authApi.getAccounts("Bearer " + token);
+        call.enqueue(new Callback<List<Account>>() {
+            @Override
+            public void onResponse(Call<List<Account>> call, Response<List<Account>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Ошибка загрузки счетов: " + response.code());
+                }
             }
-        } catch (IOException e) {
-            Log.e("ApiRepository", "Ошибка сети при получении счетов", e);
-        }
 
-        return accounts;
+            @Override
+            public void onFailure(Call<List<Account>> call, Throwable t) {
+                callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
     }
 
+    // ===================== Транзакции =====================
+    public void getTransactionsAsync(Context context, TransactionRequest request, TransactionsCallback callback) {
+        String token = getToken(context);
+        if (token == null || token.isEmpty()) {
+            callback.onError("Отсутствует токен авторизации.");
+            return;
+        }
 
+        Call<List<Transaction>> call = authApi.getTransactions("Bearer " + token, request);
+        call.enqueue(new Callback<List<Transaction>>() {
+            @Override
+            public void onResponse(Call<List<Transaction>> call, Response<List<Transaction>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError("Ошибка загрузки транзакций: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Transaction>> call, Throwable t) {
+                callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
+
+    // ===================== Согласие =====================
     public void createConsent(String token, String bankName, ConsentCallback callback) {
-        MiltiBankApi api = ApiClient.getClient().create(MiltiBankApi.class);
-
         JsonObject body = new JsonObject();
         body.addProperty("bankName", bankName);
 
-        Call<Void> call = api.createConsent("Bearer " + token, body);
-
+        Call<Void> call = authApi.createConsent("Bearer " + token, body);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    callback.onSuccess();
-                } else {
-                    callback.onError("Ошибка создания согласия: " + response.code());
-                }
+                if (response.isSuccessful()) callback.onSuccess();
+                else callback.onError("Ошибка создания согласия: " + response.code());
             }
 
             @Override
@@ -205,15 +193,19 @@ public class ApiRepository {
         });
     }
 
+    // ===================== Вспомогательные =====================
+    @Nullable
+    private static String getToken(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        return prefs.getString("auth_token", null);
+    }
+
+    // ===================== Callback интерфейсы =====================
     public interface ConsentCallback {
         void onSuccess();
         void onError(String message);
     }
 
-
-    /**
-     * Интерфейс обратного вызова для авторизации/регистрации
-     */
     public interface AuthCallback {
         void onSuccess(User user);
         void onError(String message);
@@ -224,38 +216,13 @@ public class ApiRepository {
         void onError(String message);
     }
 
-    // Получение списка транзакций для конкретного счета
-    public List<Transaction> getTransactions(
-            String accountId,          // "all" — все счета
-            LocalDateTime startDate,   // может быть null
-            LocalDateTime endDate,     // может быть null
-            String category            // null или "all" — без фильтра
-    ) {
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.add(Transaction.builder()
-                .id("t1")
-                .accountId(accountId)
-                .amount(-50.0)
-                .date(LocalDateTime.now())
-                .description("Groceries")
-                .category("Авто")
-                .build());
-        transactions.add(Transaction.builder()
-                .id("t2")
-                .accountId(accountId)
-                .amount(-20.0)
-                .date(LocalDateTime.now())
-                .description("Taxi")
-                .category("Авто")
-                .build());
-        transactions.add(Transaction.builder()
-                .id("t3")
-                .accountId(accountId)
-                .amount(500.0)
-                .date(LocalDateTime.now())
-                .description("Salary")
-                .category("Авто")
-                .build());
-        return transactions;
+    public interface AccountsCallback {
+        void onSuccess(List<Account> accounts);
+        void onError(String message);
+    }
+
+    public interface TransactionsCallback {
+        void onSuccess(List<Transaction> transactions);
+        void onError(String message);
     }
 }
