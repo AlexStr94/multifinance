@@ -53,6 +53,10 @@
             android:name=".ui.AnalyticsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.AddBanksActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

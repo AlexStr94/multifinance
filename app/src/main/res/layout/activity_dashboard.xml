@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,12 +8,14 @@
     android:background="@color/background"
     tools:context=".ui.DashboardActivity">
 
+    <!-- Основной контент -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingBottom="72dp">
 
         <LinearLayout
+            android:id="@+id/dashboard_container"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -63,17 +66,55 @@
                     android:textStyle="bold"
                     android:layout_marginTop="8dp"
                     android:textColor="@color/primaryText" />
-
             </LinearLayout>
+
+            <!-- Карточки аналитики и продуктов -->
             <include
                 layout="@layout/view_analytics_card"
                 android:id="@+id/analytics_card" />
+
             <include
                 layout="@layout/view_new_product_card"
                 android:id="@+id/new_product_card" />
+
+            <!-- Сообщение о пустых банках -->
+            <TextView
+                android:id="@+id/tv_no_banks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="У вас сейчас не добавлено ни одного банка."
+                android:textColor="@color/secondaryText"
+                android:textSize="16sp"
+                android:gravity="center"
+                android:layout_marginTop="32dp"
+                android:visibility="gone" />
+
+            <!-- Кнопка Добавить банк -->
+            <Button
+                android:id="@+id/btn_add_bank"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Добавить банк"
+                android:layout_marginTop="32dp"
+                android:visibility="gone"
+                android:backgroundTint="@color/primary"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:padding="12dp"
+                android:layout_gravity="center_horizontal" />
         </LinearLayout>
     </ScrollView>
-    <include layout="@layout/view_bottom_nav" />
 
+    <!-- 🔄 Прогресс-бар поверх контента -->
+    <ProgressBar
+        android:id="@+id/progress_dashboard"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:indeterminate="true" />
+
+    <!-- Нижняя навигация -->
+    <include layout="@layout/view_bottom_nav" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

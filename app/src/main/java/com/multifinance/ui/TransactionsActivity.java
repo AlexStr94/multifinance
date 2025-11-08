@@ -143,7 +143,7 @@ public class TransactionsActivity extends BaseActivity {
 
     private void loadInitialData() {
         // 1. Счета
-        accounts = repository.getAccounts(TOKEN);
+        accounts = repository.getAccounts(this);
         List<String> accountDisplay = new ArrayList<>();
         accountDisplay.add("Все счета");
         for (Account a : accounts) {
@@ -161,7 +161,6 @@ public class TransactionsActivity extends BaseActivity {
     private void loadTransactionsWithFilters() {
         try {
             List<Transaction> result = repository.getTransactions(
-                    TOKEN,
                     selectedAccountId != null ? selectedAccountId : ApiRepository.FILTER_ALL,
                     selectedStart,
                     selectedEnd,
@@ -179,7 +178,6 @@ public class TransactionsActivity extends BaseActivity {
     private void loadTransactionsWithFiltersAndPopulateCategories() {
         try {
             List<Transaction> result = repository.getTransactions(
-                    TOKEN,
                     ApiRepository.FILTER_ALL,
                     selectedStart,
                     selectedEnd,

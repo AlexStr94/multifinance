@@ -1,12 +1,18 @@
 package com.multifinance.data.repository;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
+import com.google.gson.JsonObject;
 import com.multifinance.data.model.Account;
+import com.multifinance.data.model.Bank;
 import com.multifinance.data.model.Transaction;
 import com.multifinance.data.model.User;
 import com.multifinance.data.remote.ApiClient;
-import com.multifinance.data.remote.AuthApi;
+import com.multifinance.data.remote.MiltiBankApi;
 import com.multifinance.data.remote.LoginRequest;
 import com.multifinance.data.remote.RegisterRequest;
 import com.multifinance.data.remote.AuthResponse;
@@ -23,10 +29,10 @@ import retrofit2.Response;
 public class ApiRepository {
     public static final String FILTER_ALL = "all";
 
-    private final AuthApi authApi;
+    private final MiltiBankApi authApi;
 
     public ApiRepository() {
-        authApi = ApiClient.getClient().create(AuthApi.class);
+        authApi = ApiClient.getClient().create(MiltiBankApi.class);
     }
 
     /**
@@ -101,6 +107,110 @@ public class ApiRepository {
         });
     }
 
+    public void getBanksAsync(Context context, BanksCallback callback) {
+        String token = getToken(context);
+
+        if (token == null || token.isEmpty()) {
+            callback.onError("Отсутствует токен авторизации. Пожалуйста, войдите снова.");
+            return;
+        }
+
+        MiltiBankApi api = ApiClient.getClient().create(MiltiBankApi.class);
+        Call<List<Bank>> call = api.getBanks("Bearer " + token);
+
+        call.enqueue(new Callback<List<Bank>>() {
+            @Override
+            public void onResponse(Call<List<Bank>> call, Response<List<Bank>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    String errorMsg = "Ошибка загрузки банков: " + response.code();
+                    Log.e("ApiRepository", errorMsg);
+                    callback.onError(errorMsg);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Bank>> call, Throwable t) {
+                Log.e("ApiRepository", "Ошибка сети при получении банков", t);
+                callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
+
+    @Nullable
+    private static String getToken(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        String token = prefs.getString("auth_token", null);
+        return token;
+    }
+
+
+    /**
+     * Получает список счетов текущего пользователя с сервера.
+     * Возвращает пустой список в случае ошибки.
+     */
+    /**
+     * Получает список счетов текущего пользователя с сервера.
+     * Возвращает пустой список в случае ошибки.
+     */
+    public List<Account> getAccounts(Context context) {
+        List<Account> accounts = new ArrayList<>();
+
+        String token = getToken(context);
+        if (token == null || token.isEmpty()) {
+            Log.e("ApiRepository", "❌ Отсутствует токен авторизации. Пользователь не вошёл в систему.");
+            return accounts;
+        }
+
+        try {
+            Call<List<Account>> call = authApi.getAccounts("Bearer " + token);
+            Response<List<Account>> response = call.execute();
+
+            if (response.isSuccessful() && response.body() != null) {
+                accounts = response.body();
+            } else {
+                Log.e("ApiRepository", "Ошибка загрузки счетов: " + response.code());
+            }
+        } catch (IOException e) {
+            Log.e("ApiRepository", "Ошибка сети при получении счетов", e);
+        }
+
+        return accounts;
+    }
+
+
+    public void createConsent(String token, String bankName, ConsentCallback callback) {
+        MiltiBankApi api = ApiClient.getClient().create(MiltiBankApi.class);
+
+        JsonObject body = new JsonObject();
+        body.addProperty("bankName", bankName);
+
+        Call<Void> call = api.createConsent("Bearer " + token, body);
+
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                } else {
+                    callback.onError("Ошибка создания согласия: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                callback.onError("Ошибка сети: " + t.getMessage());
+            }
+        });
+    }
+
+    public interface ConsentCallback {
+        void onSuccess();
+        void onError(String message);
+    }
+
+
     /**
      * Интерфейс обратного вызова для авторизации/регистрации
      */
@@ -109,24 +219,13 @@ public class ApiRepository {
         void onError(String message);
     }
 
-    public List<Account> getAccounts(String token) {
-        List<Account> accounts = new ArrayList<>();
-        accounts.add(Account.builder()
-                .id("1")
-                .name("Сберегательный")
-                .balance(1200.50)
-                .build());
-        accounts.add(Account.builder()
-                .id("2")
-                .name("Кредитный")
-                .balance(3500.75)
-                .build());
-        return accounts;
+    public interface BanksCallback {
+        void onSuccess(List<Bank> banks);
+        void onError(String message);
     }
 
     // Получение списка транзакций для конкретного счета
     public List<Transaction> getTransactions(
-            String token,
             String accountId,          // "all" — все счета
             LocalDateTime startDate,   // может быть null
             LocalDateTime endDate,     // может быть null

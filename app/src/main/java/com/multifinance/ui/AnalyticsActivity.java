@@ -87,7 +87,6 @@ public class AnalyticsActivity extends BaseActivity {
         );
 
         List<Transaction> transactions = repository.getTransactions(
-                "mock_token_123",
                 ApiRepository.FILTER_ALL,
                 start,
                 end,

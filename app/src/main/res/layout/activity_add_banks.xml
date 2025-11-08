@@ -1,65 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    tools:context=".ui.AccountsActivity">
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.AddBanksActivity">
 
     <LinearLayout
-        android:id="@+id/accounts_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp">
 
-        <!-- Верхняя панель -->
         <include layout="@layout/view_top_bar" />
 
-        <!-- Заголовок -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Счета"
+            android:text="Банки"
             android:textColor="@color/primaryText"
             android:textSize="22sp"
             android:textStyle="bold"
             android:layout_marginTop="16dp" />
 
-        <!-- Индикатор загрузки -->
         <ProgressBar
-            android:id="@+id/progress_accounts"
+            android:id="@+id/progress_banks"
+            style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="24dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:layout_marginTop="32dp" />
 
-        <!-- Сообщение, если нет счетов -->
         <TextView
-            android:id="@+id/tv_empty_accounts"
+            android:id="@+id/tv_empty_banks"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="У вас пока нет подключённых счетов"
-            android:textAlignment="center"
+            android:text="Нет данных о банках"
             android:textColor="@color/secondaryText"
-            android:textSize="16sp"
-            android:padding="24dp"
-            android:visibility="gone" />
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginTop="16dp" />
 
-        <!-- Список счетов -->
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_accounts"
+            android:id="@+id/recycler_banks"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="16dp"
-            tools:listitem="@layout/item_account" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_bank" />
 
     </LinearLayout>
 
-    <!-- Нижняя навигация -->
     <include layout="@layout/view_bottom_nav" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
